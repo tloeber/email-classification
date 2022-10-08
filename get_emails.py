@@ -42,7 +42,10 @@ def list_labels():
     creds = _authenticate()
     
     service = build('gmail', 'v1', credentials=creds)
-    results = service.users().labels().list(userId='me').execute()
+    results = service.users().labels() \
+        .list(userId='me') \
+        .execute()
+
     # TODO: Handle errors from gmail API If using this function in non-interactive way!
     labels = results.get('labels', [])
     
@@ -56,48 +59,39 @@ def list_labels():
     return labels
 
 
-def show_chatty_threads():
-    """Display threads with long conversations(>= 3 messages)
-    Return: None
+def _list_threads_paginated(next_page_token=None):
+    creds = _authenticate()
 
-    Load pre-authorized user credentials from the environment.
-    TODO(developer) - See https://developers.google.com/identity
-    for guides on implementing OAuth2 for the application.
-    """
-    creds, _ = google.auth.default()
+    # create gmail api client
+    service = build('gmail', 'v1', credentials=creds)
 
-    try:
-        # create gmail api client
-        service = build('gmail', 'v1', credentials=creds)
+    response = service.users().threads() \
+        .list(userId='me', maxResults=500, pageToken=next_page_token) \
+        .execute()
+        
+    threads = response.get('threads', [])
+    next_page_token = response.get('nextPageToken')
 
-        # pylint: disable=maybe-no-member
-        # pylint: disable:R1710
-        threads = service.users().threads().list(userId='me').execute().get('threads', [])
-        for thread in threads:
-            tdata = service.users().threads().get(userId='me', id=thread['id']).execute()
-            nmsgs = len(tdata['messages'])
-
-            # skip if <3 msgs in thread
-            if nmsgs > 2:
-                msg = tdata['messages'][0]['payload']
-                subject = ''
-                for header in msg['headers']:
-                    if header['name'] == 'Subject':
-                        subject = header['value']
-                        break
-                if subject:  # skip if no Subject line
-                    print(F'- {subject}, {nmsgs}')
-        return threads
-
-    except HttpError as error:
-        print(F'An error occurred: {error}')
+    return threads, next_page_token
 
 
-if __name__ == '__main__':
-    show_chatty_threads()
+def list_threads():
+    all_threads = []
+    next_page_token = None
+    while True:
+        threads, next_page_token = _list_threads_paginated(next_page_token)
+        all_threads.extend(threads)
+
+        # Exit loop once no more pages are left
+        if not next_page_token:
+            return all_threads
+
 
 def main():
-    list_labels()
+    # list_labels()
+    print(
+        len(list_threads())
+     )
 
 if __name__ == '__main__':
     main()
