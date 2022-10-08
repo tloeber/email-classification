@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os.path
+from typing import Callable
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,9 +13,21 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 
-def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
+def _list_labels(service):
+    results = service.users().labels().list(userId='me').execute()
+    labels = results.get('labels', [])
+    if not labels:
+        print('No labels found.')
+        return
+    print('Labels and their IDs:')
+    for label in labels:
+        print(f"{label['name']} : {label['id']}")
+
+
+def query_gmail(task: Callable):
+    """
+    Abstract function to interact with Gmail. Specific functionality needs to be 
+    passed as a function.
     """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -37,20 +50,15 @@ def main():
     try:
         # Call the Gmail API
         service = build('gmail', 'v1', credentials=creds)
-        results = service.users().labels().list(userId='me').execute()
-        labels = results.get('labels', [])
-
-        if not labels:
-            print('No labels found.')
-            return
-        print('Labels:')
-        for label in labels:
-            print(label['name'])
+        labels = _list_labels(service=service)
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
         print(f'An error occurred: {error}')
 
+
+def main():
+    query_gmail(task=_list_labels)
 
 if __name__ == '__main__':
     main()
