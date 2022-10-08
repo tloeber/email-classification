@@ -13,28 +13,15 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 
-def _list_labels(service):
-    results = service.users().labels().list(userId='me').execute()
-    labels = results.get('labels', [])
-    if not labels:
-        print('No labels found.')
-        return
-    print('Labels and their IDs:')
-    for label in labels:
-        print(f"{label['name']} : {label['id']}")
 
-
-def query_gmail(task: Callable):
-    """
-    Abstract function to interact with Gmail. Specific functionality needs to be 
-    passed as a function.
-    """
+def _authenticate():
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -47,18 +34,31 @@ def query_gmail(task: Callable):
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    try:
-        # Call the Gmail API
-        service = build('gmail', 'v1', credentials=creds)
-        labels = _list_labels(service=service)
+    return creds
 
-    except HttpError as error:
-        # TODO(developer) - Handle errors from gmail API.
-        print(f'An error occurred: {error}')
+
+def list_labels():
+
+    creds = _authenticate()
+    
+    service = build('gmail', 'v1', credentials=creds)
+    results = service.users().labels().list(userId='me').execute()
+    # TODO: Handle errors from gmail API If using this function in non-interactive way!
+    labels = results.get('labels', [])
+    
+    if not labels:
+        print('No labels found.')
+        return
+    
+    print('Labels and their IDs:')
+    for label in labels:
+        print(f"{label['name']} : {label['id']}")
+    return labels
+
 
 
 def main():
-    query_gmail(task=_list_labels)
+    list_labels()
 
 if __name__ == '__main__':
     main()
