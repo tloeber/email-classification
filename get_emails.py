@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import os.path
-from typing import Callable
+from typing import List
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,6 +12,13 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
+
+def create_gmail_client():
+    creds = _authenticate()
+
+    # create gmail api client
+    client = build('gmail', 'v1', credentials=creds)
+    return client
 
 
 def _authenticate():
@@ -38,11 +45,8 @@ def _authenticate():
 
 
 def list_labels():
-
-    creds = _authenticate()
-    
-    service = build('gmail', 'v1', credentials=creds)
-    results = service.users().labels() \
+    gmail_client = create_gmail_client()
+    results = gmail_client.users().labels() \
         .list(userId='me') \
         .execute()
 
@@ -59,13 +63,10 @@ def list_labels():
     return labels
 
 
-def _list_threads_paginated(next_page_token=None):
-    creds = _authenticate()
+def _list_threads_by_page(next_page_token=None):
+    gmail_client = create_gmail_client()
 
-    # create gmail api client
-    service = build('gmail', 'v1', credentials=creds)
-
-    response = service.users().threads() \
+    response = gmail_client.users().threads() \
         .list(userId='me', maxResults=500, pageToken=next_page_token) \
         .execute()
         
@@ -75,11 +76,11 @@ def _list_threads_paginated(next_page_token=None):
     return threads, next_page_token
 
 
-def list_threads():
+def list_all_threads() -> List:
     all_threads = []
     next_page_token = None
     while True:
-        threads, next_page_token = _list_threads_paginated(next_page_token)
+        threads, next_page_token = _list_threads_by_page(next_page_token)
         all_threads.extend(threads)
 
         # Exit loop once no more pages are left
@@ -89,9 +90,10 @@ def list_threads():
 
 def main():
     # list_labels()
-    print(
-        len(list_threads())
-     )
+    threads = list_all_threads()
+    # for thread in threads:
+    #     print(thread)
+    print(len(threads))
 
 if __name__ == '__main__':
     main()
