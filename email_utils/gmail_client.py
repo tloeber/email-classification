@@ -1,3 +1,5 @@
+# Enable current type hints for older Python version (<3.10) 
+from __future__ import annotations 
 import os
 
 from google.auth.transport.requests import Request

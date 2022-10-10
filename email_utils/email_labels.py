@@ -1,3 +1,6 @@
+# Enable current type hints for older Python version (<3.10) 
+from __future__ import annotations 
+
 import email_utils.gmail_client as client
 
 def list_labels():
