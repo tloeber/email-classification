@@ -1,6 +1,7 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
 import logging
+import pickle 
 
 import email_utils.gmail_client as client
 import email_utils.email_labels as labels
@@ -8,7 +9,7 @@ from data_models import Message, NextPageToken, ThreadId, EmailId
 from domain_models.email_thread import EmailThread
     
     
-def _list_threads_by_page(
+def _list_thread_ids_paginated(
     next_page_token: NextPageToken | None = None,
     query: str | None = None,
 ) -> tuple[list[ThreadId], NextPageToken]:
@@ -26,19 +27,19 @@ def _list_threads_by_page(
     return thread_ids, next_page_token
 
 
-def list_all_threads(query: str | None = None) -> list[ThreadId]:
-    all_threads = []
+def list_all_thread_ids(query: str | None = None) -> list[ThreadId]:
+    all_thread_ids = []
     next_page_token = None
     while True:
-        threads, next_page_token = _list_threads_by_page(
+        thread_ids, next_page_token = _list_thread_ids_paginated(
             next_page_token=next_page_token, 
             query=query
         )
-        all_threads.extend(threads)
+        all_thread_ids.extend(thread_ids)
 
         # Exit loop once no more pages are left
         if not next_page_token:
-            return all_threads
+            return all_thread_ids
 
 
 def _get_thread_details(thread_id: ThreadId) -> tuple[EmailId, list[EmailId]]:
@@ -109,8 +110,17 @@ def assign_msg_labels(
 
 def main():
     # labels.list_labels()
-    thread_ids = list_all_threads(query='After:2022/08/01')
+    thread_ids = list_all_thread_ids(
+        # query='After:2022/08/01'
+    )
     msgs_replied_to, msgs_to_discard = assign_msg_labels(thread_ids=thread_ids)
+    
+    with open('msgs_replied_to.pickle', 'wb') as f:
+        pickle.dump(obj=msgs_replied_to, file=f)
+
+    with open('msgs_to_discard.pickle', 'wb') as f:
+        pickle.dump(obj=msgs_to_discard, file=f)
+        
     print(
         len(msgs_replied_to),
         len(msgs_to_discard)
