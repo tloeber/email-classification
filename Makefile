@@ -1,0 +1,2 @@
+run-static-analysis:
+	mypy .
