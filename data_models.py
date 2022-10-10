@@ -1,10 +1,10 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
-import pydantic
+from pydantic import BaseModel
 
 
-class Message(pydantic.Basemodel):
-    msg_id: str
+class Message(BaseModel):
+    msg_id: str  # ToDo: Use type alias
     sender: str
 
     @classmethod

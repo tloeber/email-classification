@@ -1,10 +1,12 @@
-from typing import List
+# Enable current type hints for older Python version (<3.10) 
+from __future__ import annotations 
 
 import email_utils.gmail_client as client
 import email_utils.email_labels as labels
+from data_models import Message 
 
-
-def _list_threads_by_page(next_page_token=None):
+    
+def _list_threads_by_page(next_page_token=None) -> tuple[list, str]:
     gmail = client.create_client()
 
     response = gmail.users().threads() \
@@ -17,7 +19,7 @@ def _list_threads_by_page(next_page_token=None):
     return threads, next_page_token
 
 
-def list_all_threads() -> List:
+def list_all_threads() -> list:
     all_threads = []
     next_page_token = None
     while True:

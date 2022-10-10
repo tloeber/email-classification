@@ -1,8 +1,8 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
-from data_models.models import Message
+from data_models import Message
 
-MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'
+MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'  # Todo: Make env variable
 
 class EmailThread:
     def __init__(self, thread_id: str, messages: list[Message]):
@@ -46,7 +46,10 @@ class EmailThread:
 
 
     def find_messages_to_discard(self) -> list[str]:
-        """We need to discard any messages after the one eliciting reply."""
+        """
+        Enables discarding any messages after the one eliciting reply, so they
+        don't distort our data.
+        """
         # No need to worry about out-of-range index because there is always
         # at least the reply.
         index_of_first_msg_to_discard = self.index_of_first_msg_replied_to + 1
