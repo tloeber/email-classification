@@ -48,7 +48,8 @@ class EmailThread:
         returns `None`. 
         """
         # If no msg elicited reply, return None. Handle this when calling 
-        # this method.
+        # this method. NOTE: `is None` is not redundant! Without it, the index
+        # value 0 is cast to boolean and evaluates to False, so returns None!
         if self.index_of_first_msg_replied_to is None:
             return None
 
@@ -64,6 +65,8 @@ class EmailThread:
         """
         # If no msg elicited reply, don't discard any. (My own messages will be 
         # dropped in separate step.)
+        # NOTE: `is None` is not redundant! Without it, the index value 0 is 
+        # cast to boolean and evaluates to False, so function returns None!
         if self.index_of_first_msg_replied_to is None:
             return None
         

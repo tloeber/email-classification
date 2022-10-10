@@ -9,7 +9,8 @@ def list_labels():
         .list(userId='me') \
         .execute()
 
-    # TODO: Handle errors from gmail API If using this function in non-interactive way!
+    # TODO: Handle errors from gmail API If using this function in 
+    # non-interactive way!
     labels = results.get('labels', [])
     
     if not labels:
@@ -20,3 +21,7 @@ def list_labels():
     for label in labels:
         print(f"{label['name']} : {label['id']}")
     return labels
+
+
+if __name__ == '__main__':
+    list_labels()
