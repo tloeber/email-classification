@@ -6,16 +6,8 @@ from pydantic import BaseModel
 # Type aliases
 ThreadId = str
 EmailId = str
-NextPageToken = str
+NextPageToken = str | None
 
 class Message(BaseModel):
     msg_id: str  # ToDo: Use type alias
     sender: str
-
-    @classmethod
-    def from_api_response(cls, response: dict) -> Message:
-        """Constructor that picks out relevant fields from API response."""
-        return cls(
-            msg_id=response['id'],
-            sender=response['payload']['headers']['From'],
-        )
