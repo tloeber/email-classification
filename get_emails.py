@@ -1,13 +1,17 @@
 # Enable current type hints for older Python version (<3.10) 
-from __future__ import annotations 
+from __future__ import annotations
+from pyexpat.errors import messages 
 
 import email_utils.gmail_client as client
 import email_utils.email_labels as labels
-from data_models import Message 
-from domain_models import EmailThread
+from data_models import NextPageToken, ThreadId, EmailId
+from domain_models.email_thread import EmailThread
     
     
-def _list_threads_by_page(next_page_token=None) -> tuple[list[str], str]:
+def _list_threads_by_page(
+    next_page_token: NextPageToken | None = None
+) -> tuple[list[ThreadId], NextPageToken]:
+
     gmail = client.create_client()
 
     response = gmail.users().threads() \
@@ -21,7 +25,7 @@ def _list_threads_by_page(next_page_token=None) -> tuple[list[str], str]:
     return threads, next_page_token
 
 
-def list_all_threads() -> list:
+def list_all_threads() -> list[ThreadId]:
     all_threads = []
     next_page_token = None
     while True:
@@ -33,13 +37,25 @@ def list_all_threads() -> list:
             return all_threads
 
 
-def _get_thread_details(thread_id: str) -> EmailThread:
+def _get_thread_details(thread_id: ThreadId) -> tuple[EmailId, list[EmailId]]:
+    """
+    Given a thread id, this returns:
+    - id of message replied to;
+    - list of ids of messages to discard
+    """
     gmail = client.create_client()
 
-    thread = gmail.users().threads() \
+    response = gmail.users().threads() \
         .get(userId='me', id=thread_id) \
         .execute()
-    return thread
+    
+    thread = EmailThread(
+        thread_id=thread_id, 
+        messages=response['messages']
+    )
+    msg_replied_to = thread.find_msg_replied_to
+    msgs_to_discard = thread.find_messages_to_discard
+    return msg_replied_to, msgs_to_discard
 
 
 def main():

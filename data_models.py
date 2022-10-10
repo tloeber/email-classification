@@ -3,6 +3,11 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
+# Type aliases
+ThreadId = str
+EmailId = str
+NextPageToken = str
+
 class Message(BaseModel):
     msg_id: str  # ToDo: Use type alias
     sender: str
