@@ -1,6 +1,5 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
-from pyexpat.errors import messages 
 
 import email_utils.gmail_client as client
 import email_utils.email_labels as labels
