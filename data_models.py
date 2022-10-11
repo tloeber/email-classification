@@ -5,9 +5,10 @@ from pydantic import BaseModel
 
 # Type aliases
 ThreadId = str
-EmailId = str
+MessageId = str
 NextPageToken = str | None
 
 class Message(BaseModel):
     msg_id: str  # ToDo: Use type alias
     sender: str
+    body: str

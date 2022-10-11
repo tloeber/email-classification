@@ -1,6 +1,6 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
-from data_models import EmailId, Message, ThreadId
+from data_models import MessageId, Message, ThreadId
 
 MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'  # Todo: Make env variable
 
@@ -42,7 +42,7 @@ class EmailThread:
         return None
             
 
-    def find_msg_replied_to(self) -> EmailId | None:
+    def find_msg_replied_to(self) -> MessageId | None:
         """
         Returns id of message eliciting reply, if there is one. Otherwise 
         returns `None`. 
@@ -57,7 +57,7 @@ class EmailThread:
             return self.msg_ids[self.index_of_first_msg_replied_to]
         
 
-    def find_messages_to_discard(self) -> list[EmailId] | None:
+    def find_messages_to_discard(self) -> list[MessageId] | None:
         """
         Enables discarding any messages after the one eliciting reply, so they
         don't distort our data. 
@@ -76,3 +76,13 @@ class EmailThread:
             first_msg_to_discard = self.index_of_first_msg_replied_to + 1
             return self.msg_ids[first_msg_to_discard: ]
         
+    
+    def get_transformed_data() -> dict[dict] | None:
+        """
+        Returns the thread's data in format needed for further analysis:
+        - Msg id serves as a key for each row, consisting of whether a message 
+        elicited a reply, the sender, and the email body (text).
+        - All messages in a thread after the initial reply are discarded.
+        - ToDo: All messages by myself are discarded.
+        """
+        pass
