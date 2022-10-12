@@ -135,3 +135,5 @@ token.json
 temp.py
 *.code-workspace
 *.pickle
+*.csv
+*.parquet
