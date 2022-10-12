@@ -3,6 +3,9 @@ from __future__ import annotations
 import logging
 import pickle 
 
+from base64 import urlsafe_b64decode
+from bs4 import BeautifulSoup
+
 import email_utils.gmail_client as client
 from data_models import Message, NextPageToken, ThreadId, MessageId
 from domain_models.email_thread import EmailThread
@@ -42,20 +45,44 @@ def list_all_thread_ids(query: str | None = None) -> list[ThreadId]:
             return all_thread_ids
 
 
-def _get_thread_details(
+def _get_thread_with_details(
     thread_id: ThreadId
-) -> tuple[MessageId, list[MessageId], list[dict]]:
+) -> tuple[EmailThread, list[dict]]:
     """
     Given a thread id, this returns:
     - id of message replied to;
     - list of ids of messages to discard
     """
-    def _get_sender(msg: dict):
+    # ToDo: Add this to thread constructor or client class?
+
+    def _get_sender(msg: dict) -> str | None:
         headers = msg['payload']['headers']
         # Headers is a list of dicts with keys `name` and `value`
         for header in headers:
             if header['name'] == 'From':
                 return header['value']
+
+    def _get_body_as_text(msg: dict) -> str:
+        """Get body, decode it, and convert from html to text."""
+        if 'data' in msg['payload']['body'].keys():
+            body_encoded: bytes = msg['payload']['body']['data']
+        
+        # Depending on protocol, body may be located elsewhere
+        elif 'parts' in msg['payload'].keys():
+            for part in msg['payload']['parts']:
+                if 'data' in part['body'].keys():
+                    body_encoded = part['body']['data']
+                    break
+            # If we didn't find body, return empty string.
+            else:
+                return ''
+        else:
+            return ''
+
+        body_html: str = urlsafe_b64decode(body_encoded)
+        #  ToDo: Explicitly specify bs parser
+        return BeautifulSoup(body_html, features='html.parser').get_text()
+        
 
 
     gmail = client.create_client()
@@ -68,12 +95,13 @@ def _get_thread_details(
     # message to a pydantic data object.
     msgs = []
     dlq = []
-    for msg in response['messages']:
+
+    for msg in response['messages']:        
         try:
             valid_msg = Message(
                 msg_id=msg['id'],
                 sender=_get_sender(msg),
-                body=msg['payload']['body']['data']
+                body=_get_body_as_text(msg)
             )
             msgs.append(valid_msg)
 
@@ -89,38 +117,4 @@ def _get_thread_details(
         thread_id=thread_id, 
         messages=msgs,
     )
-    msg_replied_to = thread.find_msg_replied_to()
-    msgs_to_discard = thread.find_messages_to_discard()
-    return msg_replied_to, msgs_to_discard, dlq
-
-
-def assign_msg_labels(
-    thread_ids: list[ThreadId]
-) -> tuple[list[ThreadId], list[ThreadId]]:
-
-    """
-    Find messages replied to and messages to discard for analysis because
-    they were sent after first reply. 
-    Returns a list of msg ids for each of these categories.
-    """
-    logging.info('Assigning message labels')
-    msgs_replied_to = []
-    msgs_to_discard = []
-    combined_dlq = []
-
-    for thread_id in thread_ids:
-        replied_to, discard, dlq = _get_thread_details(thread_id)
-
-         # `replied_to` will be None if no reply was elicited. Ignore these.
-        if replied_to:
-            msgs_replied_to.append(replied_to)
-
-        #  `discard` will be None if no reply was elicited. Don't need to drop 
-        # anything in this case.
-        if discard:
-            msgs_to_discard.extend(discard)
-
-        if len(dlq) > 0:
-            combined_dlq.extend(dlq)
-
-    return msgs_replied_to, msgs_to_discard, combined_dlq
+    return thread, dlq
