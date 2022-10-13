@@ -1,8 +1,7 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
 import logging
-import pickle 
-
+from datetime import datetime
 from base64 import urlsafe_b64decode
 from bs4 import BeautifulSoup
 
@@ -61,11 +60,15 @@ def _get_thread_with_details(
         for header in headers:
             if header['name'] == 'From':
                 return header['value']
+        
+        logging.warning(f'No sender found. Msg: {msg}')
+        return None
+
 
     def _get_body_as_text(msg: dict) -> str:
         """Get body, decode it, and convert from html to text."""
         if 'data' in msg['payload']['body'].keys():
-            body_encoded: bytes = msg['payload']['body']['data']
+            body_encoded = msg['payload']['body']['data']
         
         # Depending on protocol, body may be located elsewhere
         elif 'parts' in msg['payload'].keys():
@@ -79,12 +82,11 @@ def _get_thread_with_details(
         else:
             return ''
 
-        body_html: str = urlsafe_b64decode(body_encoded)
+        body_html = urlsafe_b64decode(body_encoded)
         #  ToDo: Explicitly specify bs parser
         return BeautifulSoup(body_html, features='html.parser').get_text()
         
-
-
+    
     gmail = client.create_client()
 
     response = gmail.users().threads() \
@@ -101,7 +103,8 @@ def _get_thread_with_details(
             valid_msg = Message(
                 msg_id=msg['id'],
                 sender=_get_sender(msg),
-                body=_get_body_as_text(msg)
+                body=_get_body_as_text(msg),
+                timestamp=int(msg['internalDate'],)
             )
             msgs.append(valid_msg)
 

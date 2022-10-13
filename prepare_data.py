@@ -4,24 +4,12 @@ from functools import reduce
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
-
+import pickle
 
 from thread_api import list_all_thread_ids, _get_thread_with_details
 
 PERSIST_RESULTS = True
-FILTER_QUERY = 'After:2018/01/01'
-
-class Counter:
-    # ToDo: Add logging every, say, 100 API calls
-    def __init__(self):
-        self.state = 0
-
-    def increment(self):
-        self.state += 1
-
-
-def _strip_non_ascii_chars(string_: str) -> str:
-    return string_.encode('ascii', errors='ignore').decode()
+FILTER_QUERY = 'After:2017/01/01'
 
 
 def main():
@@ -43,16 +31,20 @@ def main():
     df = pd.DataFrame(dict_of_dicts) \
     .T
 
-    # Put data in the right format for ML
-    # ToDo: Move this to EDA notebook and preserve original data
-    df = df.assign(
-        target = df.replied_to.astype('int'),
-        input = (df.sender + ' ' + df.body) \
-            .map(_strip_non_ascii_chars) 
-    )
+
     if PERSIST_RESULTS:
+        # Temp: Pickle first, so we don't loose data if writing pq dfails
+        with open('df.pickle', 'wb') as f:
+            pickle.dump(obj=df, file=f)
+
+        # Remove non-ascii characters (e.g., emoticons) which cause trouble with
+        # parquet serialization
+        df['body'] = df.body.map(
+            lambda s: s.encode('ascii', errors='ignore').decode()
+        )
+
         pq.write_table(
-            pa.Table.from_pandas(df[['target', 'input']]), 
+            pa.Table.from_pandas(df), 
             'df.parquet'
         )
 

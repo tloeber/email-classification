@@ -1,5 +1,6 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
+import datetime
 from data_models import MessageId, Message, ThreadId
 
 MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'  # Todo: Make env variable
@@ -12,6 +13,7 @@ class EmailThread:
         self.msg_ids = [msg.msg_id for msg in messages]
         self.senders = [msg.sender for msg in messages]
         self.msg_body = [msg.body for msg in messages]
+        self.timestamps = [msg.timestamp for msg in messages]
         self.n_msgs = len(messages)
 
         # Already compute this crucial field we always need twice
@@ -109,6 +111,7 @@ class EmailThread:
             result[msg_id] = {
                 'replied_to': replied_to,
                 'sender': self.senders[i],
-                'body': self.msg_body[i]
+                'body': self.msg_body[i],
+                'timestamp': self.timestamps[i],
             }
         return result

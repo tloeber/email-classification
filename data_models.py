@@ -1,5 +1,6 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -12,3 +13,4 @@ class Message(BaseModel):
     msg_id: str  # ToDo: Use type alias
     sender: str
     body: str
+    timestamp: int
