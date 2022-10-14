@@ -7,5 +7,5 @@ activate-env:
 run-static-analysis:
 	mypy .
 
-prepare-data:
+run-data-pipeline:
 	python prepare_data.py

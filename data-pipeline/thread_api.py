@@ -48,9 +48,7 @@ def _get_thread_with_details(
     thread_id: ThreadId
 ) -> tuple[EmailThread, list[dict]]:
     """
-    Given a thread id, this returns:
-    - id of message replied to;
-    - list of ids of messages to discard
+    Given a thread id, creat list of detailed EmailThread objects.
     """
     # ToDo: Add this to thread constructor or client class?
 
