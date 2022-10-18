@@ -6,16 +6,15 @@ See the Jupyter notebook for the analysis.
 # Next steps:
 ## Data pipeline
 - Fully refractor to object-oriented design (Make client a class that lists threads). This should make it easier to understand the main logic of the data flow.
+- Persist raw data, so we can re-run transformation steps more easily. (Try delta lake + Databricks medallion architecture?)
 - Persist dead letter queue to Parque for later analysis. In particular, find other locations were email body can be stored, since we're currently losing a good bit of emails due to an empty body.
 - Write logs to disk.
 
 ## Data preprocessing
-- Move data cleaning and preprocessing to a dedicated notebook, so we don't have to re-run it every time we restart notebook kernel. Requires defining shared environment variables for S3 locations, as well as pickling training data.
 - More sophisticated preprocessing: Switch to Spacy for tokenization, since it seems to better handle the many URLs in email body. Add lemmatization. Remove stop words.
 
 
 ## ML
-- Fine-tune hyperparameters.
 - Leverage Explainable AI to analyze model behavior. In particular, identify which words are associated with distinguishing replies from no-replies.
-- Use Sagemaker's Model Registry to track model performance of different model versions.
+- Use Sagemaker Model Registry and Experiments to track model performance of different model and data versions.
 - Try different algorithms and compare performance.
