@@ -1,8 +1,12 @@
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
 import datetime
+import logging
+
 from data_models import MessageId, Message, ThreadId
 
+
+logger = logging.getLogger(__name__)
 MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'  # Todo: Make env variable
 
 class EmailThread:
