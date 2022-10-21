@@ -10,7 +10,7 @@ google-auth-oauthlib = "*"
 pydantic = "*"
 pandas = "*"
 bs4 = "*"
-pyarrow = "*
+pyarrow = "*"
 
 [dev-packages]
 pytest = "*"
