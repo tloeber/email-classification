@@ -3,20 +3,18 @@ from __future__ import annotations
 import os
 import logging
 from datetime import datetime
-from base64 import urlsafe_b64decode
-from bs4 import BeautifulSoup
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from data_models import Message, NextPageToken, ThreadId, MessageId
-from domain_models.email_thread import EmailThread
+# from data_models import Message, NextPageToken, ThreadId, MessageId
+# from domain_models.email_thread import EmailThread
 
 logger = logging.getLogger(__name__)
 
 
-class GmailClient:
+class CoreClient:
 
     def __init__(self, 
         # If modifying these scopes, delete the file token.json.

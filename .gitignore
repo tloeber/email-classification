@@ -134,6 +134,11 @@ token.json
 # Other
 temp.py
 *.code-workspace
+data-pipeline/data/*
 *.pickle
 *.csv
 *.parquet
+*.json
+*.jsonl
+tmp/*
+old/*

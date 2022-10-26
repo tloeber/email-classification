@@ -1,19 +1,16 @@
-# Enable current type hints for older Python version (<3.10) 
-from __future__ import annotations
-
-from gmail_client import GmailClient
-from data_models import Message, NextPageToken, ThreadId, MessageId
-from domain_models.email_thread import EmailThread
-
 import logging
+
+from .core_client import CoreClient
+from ..data_schemas.gmail_api import Message, NextPageToken, ThreadId, MessageId
+from ..email_domain.thread import EmailThread
 
 
 logger = logging.getLogger(__name__)
 
 class ThreadClient:
     
-    def __init__(self, gmailClient: GmailClient) -> ThreadClient:
-        self.gmail_client = GmailClient()
+    def __init__(self, core_client: CoreClient) -> None:
+        self.core_client = CoreClient()
 
     def get_thread_with_details(
         self, thread_id: ThreadId
@@ -86,7 +83,7 @@ class ThreadClient:
                 userId='me', 
                 maxResults=500,
                 includeSpamTrash=False, 
-                q=query
+                q=query,
                 pageToken=next_page_token, 
             ) \
             .execute()

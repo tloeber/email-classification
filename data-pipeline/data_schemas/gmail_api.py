@@ -1,6 +1,15 @@
+"""
+This module defines the schemas for the data that we expect to receive from
+the Gmail API. These schemas are used by Pydantic to parse the data, and to
+raise an exception if the data cannot be coereced into the respective schema.
+
+Note that these classes are data structures, not `real` classes: They expose
+their data rather than behavior. (The behavior is defined in the `email_domain`
+package, and is decoupled from the data schemas that particular email APIs use.)
+"""
+
 # Enable current type hints for older Python version (<3.10) 
 from __future__ import annotations
-from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -9,17 +18,11 @@ ThreadId = str
 MessageId = str
 NextPageToken = str | None
 
-class Message(BaseModel):
-    msg_id: str  # ToDo: Use type alias
-    sender: str
-    body: str
-    timestamp: int
-
 
 # data structures
 class RawThread(BaseModel):
     id: ThreadId
-    messages: list[Message]
+    messages: list[RawMessage]
 
 
 class RawMessage(BaseModel):

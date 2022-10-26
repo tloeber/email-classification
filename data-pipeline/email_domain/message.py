@@ -1,22 +1,24 @@
-from .. import data_models
-from ...utils.dlq import DLQ
+# Enable current type hints for older Python version (<3.10) 
+from __future__ import annotations 
 import logging
+import base64
+from bs4 import BeautifulSoup
+
+from ..data_schemas.gmail_api import RawMessage
+from ..utils.dlq import DLQ
 
 logger = logging.getLogger(__name__)
 
 
 class Message:
-    def __init__(
-        self, 
-        msg: data_models.Message, 
-        dlq: DLQ
-    ):
-        self.sender = self.__get_sender(msg)
-        self.body = self.__get_body_as_text(msg)
+
+    def __init__(self, msg: RawMessage, dlq: DLQ):
         self.timestamp = msg['timestamp']
         self.dlq: DLQ = dlq
-
-    def __get_sender(msg: dict, dlq: list) -> str | None:
+        self.sender = self.__get_sender(msg, dlq=dlq)
+        self.body = self.__get_body_as_text(msg)
+        
+    def __get_sender(self, msg: dict, dlq: list) -> str | None:
         headers = msg['payload']['headers']
         # Headers is a list of dicts with keys `name` and `value`
         for header in headers:
@@ -24,14 +26,13 @@ class Message:
                 return header['value']
         
         # Handle failure
-        dlq.add_message(
+        self.dlq.add_message(
             problem="No sender found",
             msg=msg
         )
         return None
 
-
-    def __get_body_as_text(msg: dict, dlq) -> str:
+    def __get_body_as_text(msg: dict, dlq) -> str | None:
         """Get body, decode it, and convert from html to text."""
         if 'data' in msg['payload']['body'].keys():
             body_encoded = msg['payload']['body']['data']
@@ -44,13 +45,13 @@ class Message:
                     break
             # If we didn't find body in parts
             else:
-                body_encoded = None
+                return None
         # If message neither contains `data` nor `parts`
         else:
-            return body_encoded = None
+            return None
         
         if body_encoded is not None:
-            body_html = urlsafe_b64decode(body_encoded)
+            body_html = base64.urlsafe_b64decode(body_encoded)
             #  ToDo: Explicitly specify bs parser
             return BeautifulSoup(body_html, features='html.parser').get_text()
         

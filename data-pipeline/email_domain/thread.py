@@ -3,13 +3,15 @@ from __future__ import annotations
 import datetime
 import logging
 
-from data_models import MessageId, Message, ThreadId
+from ..data_schemas.gmail_api import MessageId, Message, ThreadId
 
 
-logger = logging.getLogger(__name__)
 MY_EMAIL_ADDRESS = 'thomas.loeber73@gmail.com'  # Todo: Make env variable
+logger = logging.getLogger(__name__)
+
 
 class EmailThread:
+
     def __init__(self, thread_id: ThreadId, messages: list[Message]):
         self.thread_id = thread_id
         
@@ -47,7 +49,6 @@ class EmailThread:
         self.index_of_first_msg_replied_to = None 
         return None
             
-
     def find_msg_replied_to(self) -> MessageId | None:
         """
         Returns id of message eliciting reply, if there is one. Otherwise 
@@ -62,7 +63,6 @@ class EmailThread:
         else:
             return self.msg_ids[self.index_of_first_msg_replied_to]
         
-
     def find_messages_to_discard(self) -> list[MessageId] | None:
         """
         Enables discarding:
@@ -85,8 +85,7 @@ class EmailThread:
             # at least the reply.        
             first_msg_to_discard = self.index_of_first_msg_replied_to + 1
             return self.msg_ids[first_msg_to_discard: ]
-        
-    
+           
     def get_transformed_data(self) -> dict | None:
         """
         Returns the thread's data in format needed for further analysis:
