@@ -6,19 +6,19 @@ See the Jupyter notebooks for the analysis.
 # Next steps:
 ## Data pipeline
 - Fully refractor to object-oriented design (Make client a class that lists threads). This should make it easier to understand the main logic of the data flow.
-- Oversample using SMOTE etc, rather than w/ replacement.
-- Add description and explanation to ReadMe.
+- Document in separate ReadMe. Explain architectural decisions.
 - Persist raw data, so we can re-run transformation steps more easily. (Try delta lake + Databricks medallion architecture?)
 - Persist dead letter queue to Parque for later analysis. In particular, find other locations were email body can be stored, since we're currently losing a good bit of emails due to an empty body.
 - Write logs to disk.
 
 ## Data preprocessing
+- Oversample using SMOTE etc, rather than w/ replacement.
 - More sophisticated preprocessing: Switch to Spacy for tokenization, since it seems to better handle the many URLs in email body. Add lemmatization. Remove stop words.
 - Handle preprocessing through a sagemaker transformer, so we can track data versions through sagemaker experiments.
 
 ## ML
-- Leverage Explainable AI to analyze model behavior. In particular, identify which words are associated with distinguishing replies from no-replies.
-- Use Sagemaker Model Experiments to track model performance of different model and data versions.
-- Use Sagemaker Projects and Pipelines to run end-to-end once we're past the experimental/interactive phase.
+- ~~Leverage Explainable AI to analyze model behavior. In particular, identify which words are associated with distinguishing replies from no-replies.~~ Not directly supported for BlazingText, but use once implemented other algorithms.
+- Use Sagemaker Experiments/Model Registry to track model performance of different model and data versions.
+- Use Sagemaker Projects/Pipelines to run end-to-end once we're past the experimental/interactive phase.
 - Add incremental training of final model using validation data.
 - Try different algorithms and compare performance.
