@@ -137,3 +137,4 @@ temp.py
 *.pickle
 *.csv
 *.parquet
+data/*
