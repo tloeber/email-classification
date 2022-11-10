@@ -1,5 +1,5 @@
 In this project, I analyze my emails and predict which emails I will reply to. I download all emails since 2017 using Gmail's API, and reserve the newest 10% as test data. 
-To perform the actual classification, I use Amazon's Blazing Text algorithm, which is an implementation of Word2Vec optimized for the AWS machine learning infrastructure. It is based on representing words in a lower-dimensional space (trained from a large book corpus), which can then be used to cluster documents based on their words. Features used are the words in the email body. Unfortunately, this algorithm does not support using additional features such as sender. In the future, I plan to add analyses using different algorithms which can use different features.
+To perform the actual classification, I use BlazingText, which is a classification algorithm based on Amazon's optimization of Word2Vec. It is based on representing words in a lower-dimensional space (trained from a large book corpus), which can then be used to cluster documents based on their words. Features used are the words in the email body. Unfortunately, this algorithm does not support using additional features such as sender. In the future, I plan to add analyses using different algorithms which can use different features.
 
 See the Jupyter notebooks for the analysis.
 
