@@ -21,5 +21,8 @@ wget https://raw.githubusercontent.com/tloeber/utils_and_configs/main/dotfiles/b
 # There are no dotfiles in ~ (i.e., /root/) to modify, so use the ones in /etc
 echo "source ~/.bash_aliases" >> /etc/bash.bashrc
 
-
 # Python packages
+# ===============
+
+# Incl. sklearn so version can be updated to work with imblearn 
+pip install python-dotenv  scikit-learn imbalanced-learn 
