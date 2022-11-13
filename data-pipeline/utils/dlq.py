@@ -13,24 +13,26 @@ class DLQ:
     """
     Dead letter queue to store messages that failed to process correctly.
     """
-    def __init__(self, 
-        logger: logging.Logger, 
-        name: str = None
+    def __init__(self,
+        logger: logging.Logger,
+        name: str | None = None
     ) -> None:
         self.logger = logger
         self.records: list[dict] = []
         self.name = name
 
     def add_message(
-        self, 
-        problem: str, 
+        self,
+        problem: str,
         exception: Exception | None = None,
+        data: str | None = None,
     ):
         self.logger.warning(f'{problem}. {exception}')
         self.records.append(
             {
                 "problem": problem,
                 "exception": str(exception),
-                "timestamp": f'{datetime.now()}'
+                "timestamp": f'{datetime.now()}',
+                'data': data,
             }
         )

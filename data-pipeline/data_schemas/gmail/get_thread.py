@@ -14,12 +14,13 @@ package, and is decoupled from the data schemas that particular email APIs use.)
 from __future__ import annotations
 
 import base64
+import json
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
 from data_schemas.gmail.simple_types import MessageId, ThreadId
-from utils import DLQ
+from utils.dlq import DLQ
 
 
 # Customize Pydantic base model
@@ -62,68 +63,74 @@ class RawMessage(CustomBaseModel):
     id: MessageId
     internalDate: int  # UNIX timestamp
     payload: MessagePayload
-    dlq: DLQ
+    dlq: DLQ  # To hold messages that did not conform to the expected schema
+
+    class Config:
+        # Since DLQ is not a pydantic data type, we need to explicitly allow
+        # using a normal class as a type.
+        arbitrary_types_allowed = True
 
 
     def get_sender(self) -> str | None:
         """
         Return sender if found. Otherwise, add message to DLQ and return None.
         """
-        for header in self.payload.header:
-            if header.name == 'From':
-                return header.value
+        for header in self.payload.headers:
+            if header['name'] == 'From':
+                return header['value']
 
         # If we end up here, header was not found
         self.dlq.add_message(
             problem="No sender found in message payload.",
-            self={'id': self.id, 'payload': self.payload}
+            data=json.dumps(
+                {'id': self.id, 'payload': self.payload}
+            )
         )
         return None
 
 
     def get_body_as_text(self) -> str | None:
         """Get body, decode it, and convert from html to text."""
+        # Todo: Consider using polymorphism to simplify logic of getting
+        # sender and body for different  MIME types.
 
-        if 'data' in self.payload.body.keys():
+        # Check if the default body location contains any data
+        if self.payload.body and (self.payload.body.data is not None):
             body_encoded = self.payload.body.data
 
         # Depending on protocol, body may be located elsewhere
-        elif 'parts' in self.payload.keys():
+        elif self.payload.parts:
             for part in self.payload.parts:
-                if 'data' in part.body.keys():
+                if part.body and part.body.data is not None:
                     body_encoded = part.body.data
                     break
-            # If we didn't find body in parts
-            else:
-                return None
-        # If message neither contains `data` nor `parts`
-        else:
-            return None
 
         # If we found email body, decode it
-        if body_encoded is not None:
+        try:
             body_html = base64.urlsafe_b64decode(body_encoded)
             # ToDo: Explicitly specify bs parser
             return BeautifulSoup(body_html, features='html.parser').get_text()
 
-        # Handle failure
-        else:
+        # If we didn't find body, add msg to DLQ and return None
+        except NameError:
             self.dlq.add_message(
                 problem="No body found",
-                msg=self.json()
+                data=self.json()
             )
             # NOTE: Used to return empty string!
             return None
 
 
 class MessagePayload(CustomBaseModel):  # pylint: disable=missing-class-docstring
-    body: MessageBody
+    body: MessageBody | None  # May be `None` for container MIME message parts
     headers: list[dict]
     parts: MIMEParts | None
 
 
 class MessageBody(CustomBaseModel):  # pylint: disable=missing-class-docstring
-    data: str
+    # Data may be empty for MIME container types that have no message body or
+    # when the body data is sent as a separate attachment.
+    data: str | None
 
 
 class MIMEParts(CustomBaseModel):
@@ -131,7 +138,7 @@ class MIMEParts(CustomBaseModel):
     This contains child MIME messsage parts for *container* MIME messsage parts.
     For non-container MIME message part types, this field is empty.
     """
-    body: MIMEBody
+    body: MIMEBody | None
 
 
 class MIMEBody(CustomBaseModel):  # pylint: disable=missing-class-docstring

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from data_schemas.gmail.get_threads import RawMessage as GmailRawMessage
+from data_schemas.gmail.get_thread import RawMessage as GmailRawMessage
 
 logger = logging.getLogger(__name__)
 
@@ -26,19 +26,27 @@ class Message:
     is merely coincidental.
     """
 
-    def __init__(self, sender: str, body_as_text: str, unix_timestamp: int):
-        self._unix_timestamp = unix_timestamp,
+    def __init__(
+        self, sender: str | None, body_as_text: str | None,
+        unix_timestamp: int | None,
+    ):
+        self._unix_timestamp = unix_timestamp
         self._sender = sender
         self._body_as_text = body_as_text
 
     # Constructors from *particular* raw message schemas.
     # So far, only implemented for Gmail.
     @classmethod
-    def from_gmail(cls, raw_msg: GmailRawMessage):
+    def from_gmail(
+        cls, raw_msg: GmailRawMessage,
+    ):
+        """
+        Construct general email message from particular Gmail API response.
+        """
         msg = cls(
             sender=raw_msg.get_sender(),
             body_as_text=raw_msg.get_body_as_text(),
-            unix_timestamp = raw_msg.internalDate
+            unix_timestamp=raw_msg.internalDate,
         )
         return msg
 
