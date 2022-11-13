@@ -132,8 +132,11 @@ token.json
 
 
 # Other
+# =====
+
 temp.py
-*.code-workspace
+# Pycharm
+.idea/*
 *.pickle
 *.csv
 *.parquet
