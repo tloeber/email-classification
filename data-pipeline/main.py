@@ -1,10 +1,10 @@
 """
 This is the entry point for the data pipeline, which gets emails from Gmail API,
-converting data to tabular format, and saves result as parquet file for 
+converting data to tabular format, and saves result as parquet file for
 downstream analysis.
 """
 
-# Enable current type hints for older Python version (<3.10) 
+# Enable current type hints for older Python version (<3.10)
 from __future__ import annotations
 import pandas as pd
 import pyarrow.parquet as pq
@@ -12,17 +12,35 @@ import pyarrow as pa
 import pickle
 from functools import reduce
 import logging
+import logging.config  # Config needs to be explicitly imported
+import boto3
+import yaml
 
-from client.thread_client import ThreadClient
+from gmail_client.thread_client import ThreadClient
 
 
 PERSIST_RESULTS = True
+UPLOAD_DATA = True
 FILTER_QUERY = 'After:2022/10/01'
+# Todo: get from dotenv file
+BUCKET = 'email-classification-sagemaker'
 
+
+with open('conf/logging.yaml', 'r') as f:
+    config = yaml.safe_load(f.read())
+logging.config.dictConfig(config)
 logger = logging.getLogger(__name__)
+
+s3 = boto3.client('s3')
 
 
 def main():
+    # Validate parameters
+    if UPLOAD_DATA and not PERSIST_RESULTS:
+        raise Exception(
+            "To upload data, you must also set `PERSIT_RESULTS` to true."
+        )
+
     thread_client = ThreadClient()
     df = get_email_data(
         thread_client=thread_client,
@@ -37,19 +55,28 @@ def main():
         )
 
         pq.write_table(
-            pa.Table.from_pandas(df), 
-            'df.parquet'
+            pa.Table.from_pandas(df),
+            'data/df.parquet'
         )
+
+    if UPLOAD_DATA:
+            s3.upload_file(
+            Filename='data/df.parquet',
+            Bucket=BUCKET,
+            Key='silver/df.parquet'
+        )
+
+
 
     if df.index.duplicated().any():
         raise Warning('Found duplicated index values.')
-    
+
 
 def get_email_data(
-    thread_client: ThreadClient, 
+    thread_client: ThreadClient,
     filter_query: str
-) -> tuple[pd.DataFrame, list[dict]]: 
-    thread_ids = thread_client.list_all_thread_ids(
+) -> tuple[pd.DataFrame, list[dict]]:
+    thread_ids = thread_client.list_thread_ids(
         query=filter_query
     )
 
@@ -67,7 +94,7 @@ def get_email_data(
         list_of_dicts
     )
     data = pd.DataFrame(dict_of_dicts).T
-    
+
     return data, dlq
 
 
