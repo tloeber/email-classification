@@ -6,9 +6,15 @@ raise an exception if the data cannot be coereced into the respective schema.
 This specific module defines all schemas for *getting* a particular thread.
 
 Note that these classes are data structures, not `real` classes: They expose
-their data rather than behavior. (The behavior is defined in the `email_domain`
-package, and is decoupled from the data schemas that particular email APIs use.)
+their data, rather than exposing behavior while encapsulating data. (The
+behavior is defined in the `email_domain` package, and is decoupled from the
+data schemas that particular email APIs use.)
 """
+
+# Due to the large number of inner data classes - which result from the nesting
+# of the different parts of an email object – it seems excessive to add a
+# docstring to each. So turn off this pylint warning for the entire module.
+# pylint: disable=missing-class-docstring
 
 # Enable current type hints for older Python version (<3.10)
 from __future__ import annotations
@@ -29,23 +35,42 @@ from utils.dlq import DLQ
 class CustomBaseModel(BaseModel):
     """
     Configured the validation behavior to *allow but ignore* extra fields
-    passed to constructor
+    passed to constructor. Also, just in case, make instances immutable.
     """
     class Config:
+        """Configures validation behavior."""
         extra = 'ignore'
-
-
-# Top-level data structure
-# ========================
-
-class RawThread(CustomBaseModel):
-    """Scheme of response to a get-threads API call."""
-    id: ThreadId
-    messages: list[RawMessage]
+        frozen = 'true'
 
 
 # *Inner* data structures
 # =======================
+
+class MIMEBody(CustomBaseModel):
+    data: bytes  # Base64-encoded bytes
+
+
+class MIMEParts(CustomBaseModel):
+    """
+    This contains child MIME messsage parts for *container* MIME messsage parts.
+    For non-container MIME message part types, this field is empty.
+    """
+    mime_body: MIMEBody | None
+
+
+class MessageBody(CustomBaseModel):
+    # Data may be empty for MIME container types that have no message body or
+    # when the body data is sent as a separate attachment.
+    data: str | None  # Or is it Literal[{'size': 0}] if it's missing?
+
+
+class MessagePayload(CustomBaseModel):
+    body: MessageBody | None  # May be `None` for container MIME message parts
+    headers: list[dict]
+    mime_parts: MIMEParts | None
+    # Todo: Consider leveraging polymorphism, depending on value of 'mimeType'
+    mimeType: str
+
 
 # Todo: Create interface for returning sender & body that this class implements
 class RawMessage(CustomBaseModel):
@@ -99,8 +124,8 @@ class RawMessage(CustomBaseModel):
             body_encoded = self.payload.body.data
 
         # Depending on protocol, body may be located elsewhere
-        elif self.payload.parts:
-            for part in self.payload.parts:
+        elif self.payload.mime_parts:
+            for part in self.payload.mime_parts:
                 if part.body and part.body.data is not None:
                     body_encoded = part.body.data
                     break
@@ -121,25 +146,11 @@ class RawMessage(CustomBaseModel):
             return None
 
 
-class MessagePayload(CustomBaseModel):  # pylint: disable=missing-class-docstring
-    body: MessageBody | None  # May be `None` for container MIME message parts
-    headers: list[dict]
-    parts: MIMEParts | None
 
+# Top-level data structure
+# ========================
 
-class MessageBody(CustomBaseModel):  # pylint: disable=missing-class-docstring
-    # Data may be empty for MIME container types that have no message body or
-    # when the body data is sent as a separate attachment.
-    data: str | None
-
-
-class MIMEParts(CustomBaseModel):
-    """
-    This contains child MIME messsage parts for *container* MIME messsage parts.
-    For non-container MIME message part types, this field is empty.
-    """
-    body: MIMEBody | None
-
-
-class MIMEBody(CustomBaseModel):  # pylint: disable=missing-class-docstring
-    data: bytes  # Base64-encoded bytes
+class RawThread(CustomBaseModel):
+    """Scheme of response to a get-threads API call."""
+    id: ThreadId
+    messages: list[RawMessage]

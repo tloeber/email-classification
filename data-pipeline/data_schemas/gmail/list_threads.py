@@ -6,8 +6,9 @@ raise an exception if the data cannot be coereced into the respective schema.
 This specific module defines all schemas for *listing* threads.
 
 Note that these classes are data structures, not `real` classes: They expose
-their data rather than behavior. (The behavior is defined in the `email_domain`
-package, and is decoupled from the data schemas that particular email APIs use.)
+their data, rather than exposing behavior while encapsulating data. (The
+behavior is defined in the `email_domain` package, and is decoupled from the
+data schemas that particular email APIs use.)
 """
 
 # Enable current type hints for older Python version (<3.10)
@@ -23,18 +24,20 @@ from data_schemas.gmail.simple_types import NextPageToken, ThreadId
 
 class CustomBaseModel(BaseModel):
     """
-    Configured the validation behavior to *allow but ignore* extra fields
-    passed to constructor
+    Change the validation behavior to *allow but ignore* extra fields
+    passed to constructor. Also, just in case, make instances immutable.
     """
     class Config:
+        """Configures validation behavior."""
         extra = 'ignore'
+        frozen = 'true'
 
 
 # Top-level data structure
 # ========================
 
 class RawThreadsList(CustomBaseModel):
-    """Response callling `list` on the threads API."""
+    """Response to calling `list` on the threads API."""
     nextPageToken: NextPageToken
     threads: list[RawThreadSummary]
 
