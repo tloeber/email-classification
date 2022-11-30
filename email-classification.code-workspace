@@ -10,6 +10,10 @@
 		// See https://github.com/tloeber/utils_and_configs/blob/main/IDE_settings/vscode/settings.json
 		// and https://github.com/tloeber/utils_and_configs/blob/main/python/initialize_conda.sh
 		"terminal.integrated.defaultProfile.linux": "BashWithConda",
-	    "terminal.integrated.defaultProfile.windows": "BashWithConda",
+		"terminal.integrated.defaultProfile.windows": "BashWithConda",
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": []
 	}
 }

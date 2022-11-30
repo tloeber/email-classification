@@ -1,0 +1,23 @@
+input_features:
+  - name: body
+    type: text
+    encoder: bert
+  - name: time_received
+    type: date
+  - name: sender
+    type: category
+
+preprocessing:
+#   split:
+#     type: datetime
+#     column: time_received
+#     probabilities: [0.75, 0.1, 0.15]
+  oversample_minority:
+    0.5  # Give each class 50% representation
+
+trainer:
+  validation_metric: roc_auc
+
+output_features:
+  - name: replied_to
+    type: binary
