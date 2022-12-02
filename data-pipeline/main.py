@@ -13,19 +13,23 @@ import pickle
 from functools import reduce
 import logging
 import logging.config  # Config needs to be explicitly imported
+from typing import Final
+
 import boto3
 import yaml
 
 from gmail_client.thread_client import ThreadClient
+from data_schemas.gmail.simple_types import ThreadId
 
 
-PERSIST_RESULTS = True
-UPLOAD_DATA = True
-FILTER_QUERY = 'After:2022/10/01'
-# Todo: get from dotenv file
-BUCKET = 'email-classification-sagemaker'
+PERSIST_RESULTS: Final[bool]  = True
+UPLOAD_DATA: Final[bool] = True
+FILTER_QUERY: Final[str]  = 'After:2022/10/01'
+# Todo: get from same dotenv file that ML uses
+BUCKET: Final[str] = 'email-classification-sagemaker'
 
 
+# Set up logging
 with open('conf/logging.yaml', 'r') as f:
     config = yaml.safe_load(f.read())
 logging.config.dictConfig(config)
@@ -76,7 +80,7 @@ def get_email_data(
     thread_client: ThreadClient,
     filter_query: str
 ) -> tuple[pd.DataFrame, list[dict]]:
-    thread_ids = thread_client.list_thread_ids(
+    thread_ids: Final[list[ThreadId]] = thread_client.list_thread_ids(
         query=filter_query
     )
 

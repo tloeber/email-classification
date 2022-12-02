@@ -10,11 +10,15 @@ google-auth-oauthlib = "*"
 pydantic = "*"
 pandas = "*"
 bs4 = "*"
-pyarrow = "*
+pyarrow = "*"
+pyyaml = "*"
 
 [dev-packages]
 pytest = "*"
 mypy = "*"
+botocore-stubs = "*"
+code2flow = "*"
+graphviz = "*"
 
 [requires]
 python = 3.10

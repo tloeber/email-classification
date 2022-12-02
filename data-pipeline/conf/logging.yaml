@@ -1,6 +1,6 @@
 version: 1
 
-# This ensures loggging in different modules works too. The problem is that
+# This ensures loggging works in imported modules, too. The problem is that
 # the logging config is loaded *after* modules have been imported, and by
 # default loading a logging config from file will disable all loggers that
 # already exist. See
@@ -9,7 +9,7 @@ disable_existing_loggers: false
 
 formatters:
   simple:
-    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format: '%(levelname)s - %(asctime)8s - %(name)s - %(filename)s, line %(lineno)4s: %(message)s'
 handlers:
   console:
     class: logging.StreamHandler

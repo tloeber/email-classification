@@ -33,19 +33,10 @@ class CustomBaseModel(BaseModel):
         frozen = 'true'
 
 
-# Top-level data structure
-# ========================
-
-class RawThreadsList(CustomBaseModel):
-    """Response to calling `list` on the threads API."""
-    nextPageToken: NextPageToken
-    threads: list[RawThreadSummary]
-
-
 # *Inner* data structures
-# -----------------------
+# =======================
 
-class RawThreadSummary(CustomBaseModel):
+class RawGmailThreadSummary(CustomBaseModel):
     """
     This class models an individual thread in the `list threads` response. Note
     that - by contrast to a `get thread` call, it does not contain all the
@@ -55,3 +46,12 @@ class RawThreadSummary(CustomBaseModel):
     # History id is a unique identifier about when a thread was last updated.
     # Persist for data versioning.
     historyId: str
+
+
+# Top-level data structure
+# ========================
+
+class RawGmailThreadsList(CustomBaseModel):
+    """Response to calling `list` on the threads API."""
+    nextPageToken: NextPageToken
+    threads: list[RawGmailThreadSummary]

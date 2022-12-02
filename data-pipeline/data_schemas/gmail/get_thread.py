@@ -9,6 +9,10 @@ Note that these classes are data structures, not `real` classes: They expose
 their data, rather than exposing behavior while encapsulating data. (The
 behavior is defined in the `email_domain` package, and is decoupled from the
 data schemas that particular email APIs use.)
+
+The order of class definitions is significant: Start with innermost data
+classes! Otherwise, Pydantic raises an error (though it may still  be
+possible to make it work by explicitly updating forward references.)
 """
 
 # Due to the large number of inner data classes - which result from the nesting
@@ -21,10 +25,12 @@ from __future__ import annotations
 
 import base64
 import json
+from typing import Final, ClassVar
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
+from data_schemas.interface import RawMessageInterface
 from data_schemas.gmail.simple_types import MessageId, ThreadId
 from utils.dlq import DLQ
 
@@ -72,8 +78,7 @@ class MessagePayload(CustomBaseModel):
     mimeType: str
 
 
-# Todo: Create interface for returning sender & body that this class implements
-class RawMessage(CustomBaseModel):
+class RawGmailMessage(RawMessageInterface):
     """
     Even though this is a data structure rather than a proper class, I still
     decided to implement custom getter logic here. Rationale:
@@ -88,17 +93,13 @@ class RawMessage(CustomBaseModel):
     id: MessageId
     internalDate: int  # UNIX timestamp
     payload: MessagePayload
-    dlq: DLQ  # To hold messages that did not conform to the expected schema
 
-    class Config:
-        # Since DLQ is not a pydantic data type, we need to explicitly allow
-        # using a normal class as a type.
-        arbitrary_types_allowed = True
+    dlq: ClassVar = DLQ(name="RawGmailMessage")
 
-
-    def get_sender(self) -> str | None:
+    @property
+    def sender(self) -> str | None:
         """
-        Return sender if found. Otherwise, add message to DLQ and return None.
+        Return sender if found. Otherwise raise Exception.
         """
         for header in self.payload.headers:
             if header['name'] == 'From':
@@ -107,14 +108,12 @@ class RawMessage(CustomBaseModel):
         # If we end up here, header was not found
         self.dlq.add_message(
             problem="No sender found in message payload.",
-            data=json.dumps(
-                {'id': self.id, 'payload': self.payload}
-            )
+            data=self.json()
         )
         return None
 
-
-    def get_body_as_text(self) -> str | None:
+    @property
+    def body_as_text(self) -> str | None:
         """Get body, decode it, and convert from html to text."""
         # Todo: Consider using polymorphism to simplify logic of getting
         # sender and body for different  MIME types.
@@ -131,18 +130,17 @@ class RawMessage(CustomBaseModel):
                     break
 
         # If we found email body, decode it
-        try:
-            body_html = base64.urlsafe_b64decode(body_encoded)
+        if body_encoded:
+            body_html: bytes = base64.urlsafe_b64decode(body_encoded)
             # ToDo: Explicitly specify bs parser
             return BeautifulSoup(body_html, features='html.parser').get_text()
 
-        # If we didn't find body, add msg to DLQ and return None
-        except NameError:
+        # If we didn't find body, return None
+        else:
             self.dlq.add_message(
-                problem="No body found",
+                problem="No body found in message payload.",
                 data=self.json()
             )
-            # NOTE: Used to return empty string!
             return None
 
 
@@ -150,7 +148,7 @@ class RawMessage(CustomBaseModel):
 # Top-level data structure
 # ========================
 
-class RawThread(CustomBaseModel):
+class RawGmailThread(CustomBaseModel):
     """Scheme of response to a get-threads API call."""
     id: ThreadId
-    messages: list[RawMessage]
+    messages: list[RawGmailMessage]
