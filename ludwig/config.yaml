@@ -4,6 +4,8 @@ input_features:
     encoder: bert
   - name: time_received
     type: date
+    preprocessing:
+      datetime_format: "%Y-%m-%d %H:%M:%S"
   - name: sender
     type: category
 

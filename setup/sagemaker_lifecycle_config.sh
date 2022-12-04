@@ -24,5 +24,6 @@ echo "source ~/.bash_aliases" >> /etc/bash.bashrc
 # Python packages
 # ===============
 
-# Incl. sklearn so version can be updated to work with imblearn 
-pip install python-dotenv  scikit-learn imbalanced-learn 
+# Incl. sklearn so version can be updated to work with imblearn
+pip install -U python-dotenv  scikit-learn imbalanced-learn spacy pandas-stubs
+python -m spacy download en_core_web_sm
