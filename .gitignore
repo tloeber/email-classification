@@ -127,11 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-credentials.json
-token.json
 
 
 # Other
+credentials.json
+token.json
+
 temp.py
 *.code-workspace
 data-pipeline/data/*
@@ -142,3 +143,4 @@ data-pipeline/data/*
 *.jsonl
 tmp/*
 old/*
+data-pipeline/test/data/*

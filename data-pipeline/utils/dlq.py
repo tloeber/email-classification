@@ -6,7 +6,7 @@ successfully.
 # Enable current type hints for older Python version (<3.10)
 from __future__ import annotations
 
-from typing import Final, NoReturn
+from typing import Final, NoReturn, Any, TypeAlias
 from datetime import datetime
 import logging
 import json
@@ -14,6 +14,8 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Define struucture of a DLQ messsage
+DLQMessage: TypeAlias = dict[str, Any]
 
 class DLQ:
     """
@@ -21,8 +23,8 @@ class DLQ:
     """
     def __init__(self, name: str | None = None) -> None:
         self._name: str | None = name
-        self._creation_time: Final[str] = f'{datetime.now()}'
-        self._messages: list[dict] = []
+        self._creation_datetime: Final[str] = f'{datetime.now()}'
+        self._messages: list[DLQMessage] = []
 
     @property
     def name(self) -> str | None:
@@ -46,7 +48,7 @@ class DLQ:
 
     def __str__(self) -> str:
         """ String representation will be used to persist DLQ."""
-        dlq_as_dict = {
+        dlq_as_dict: dict[str, str | list[DLQMessage] | None] = {
             'name': self._name,
             'creationDateTime': self._creation_datetime,
             'messages': self._messages
@@ -67,13 +69,15 @@ class DLQ:
                     'Expected filename to end in `.json` but instead found '
                     f'{file_extension}.'
                 )
+            else:
+                return None
 
         if file_name:
             _validate_filename(file_name)
         else:
             # Create  default filename, if not passed
             file_name: str = \
-                f'DLQ-{self._name or "unknown"}-{self._creation_time}'
+                f'DLQ-{self._name or "unknown"}-{self._creation_datetime}'
 
         # If directory is not specified, use the current working directory.
         if not directory:

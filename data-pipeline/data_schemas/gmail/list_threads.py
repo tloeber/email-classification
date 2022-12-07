@@ -3,6 +3,9 @@ This package defines the schemas for the data that we expect to receive from
 the Gmail API. These schemas are used by Pydantic to parse the data, and to
 raise an exception if the data cannot be coereced into the respective schema.
 
+API Documentation:
+https://googleapis.github.io/google-api-python-client/docs/dyn/gmail_v1.users.threads.html
+
 This specific module defines all schemas for *listing* threads.
 
 Note that these classes are data structures, not `real` classes: They expose

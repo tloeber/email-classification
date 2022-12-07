@@ -3,6 +3,9 @@ This package defines the schemas for the data that we expect to receive from
 the Gmail API. These schemas are used by Pydantic to parse the data, and to
 raise an exception if the data cannot be coereced into the respective schema.
 
+API Documentation:
+https://googleapis.github.io/google-api-python-client/docs/dyn/gmail_v1.users.threads.html
+
 This specific module defines all schemas for *getting* a particular thread.
 
 Note that these classes are data structures, not `real` classes: They expose
@@ -12,7 +15,7 @@ data schemas that particular email APIs use.)
 
 The order of class definitions is significant: Start with innermost data
 classes! Otherwise, Pydantic raises an error (though it may still  be
-possible to make it work by explicitly updating forward references.)
+possible to make it work by explicitly updating forward references.
 """
 
 # Due to the large number of inner data classes - which result from the nesting
@@ -30,7 +33,7 @@ from typing import Final, ClassVar
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 
-from data_schemas.interface import RawMessageInterface
+from adaptors.interface import MessageAdaptorInterface
 from data_schemas.gmail.simple_types import MessageId, ThreadId
 from utils.dlq import DLQ
 
@@ -56,7 +59,7 @@ class MIMEBody(CustomBaseModel):
     data: bytes  # Base64-encoded bytes
 
 
-class MIMEParts(CustomBaseModel):
+class MIMEPart(CustomBaseModel):
     """
     This contains child MIME messsage parts for *container* MIME messsage parts.
     For non-container MIME message part types, this field is empty.
@@ -72,13 +75,13 @@ class MessageBody(CustomBaseModel):
 
 class MessagePayload(CustomBaseModel):
     body: MessageBody | None  # May be `None` for container MIME message parts
-    headers: list[dict]
-    mime_parts: MIMEParts | None
+    headers: list[dict[str, str]]
+    mime_parts: list[MIMEPart] | None
     # Todo: Consider leveraging polymorphism, depending on value of 'mimeType'
     mimeType: str
 
 
-class RawGmailMessage(RawMessageInterface):
+class RawGmailMessage(CustomBaseModel):
     """
     Even though this is a data structure rather than a proper class, I still
     decided to implement custom getter logic here. Rationale:
@@ -93,56 +96,6 @@ class RawGmailMessage(RawMessageInterface):
     id: MessageId
     internalDate: int  # UNIX timestamp
     payload: MessagePayload
-
-    dlq: ClassVar = DLQ(name="RawGmailMessage")
-
-    @property
-    def sender(self) -> str | None:
-        """
-        Return sender if found. Otherwise raise Exception.
-        """
-        for header in self.payload.headers:
-            if header['name'] == 'From':
-                return header['value']
-
-        # If we end up here, header was not found
-        self.dlq.add_message(
-            problem="No sender found in message payload.",
-            data=self.json()
-        )
-        return None
-
-    @property
-    def body_as_text(self) -> str | None:
-        """Get body, decode it, and convert from html to text."""
-        # Todo: Consider using polymorphism to simplify logic of getting
-        # sender and body for different  MIME types.
-
-        # Check if the default body location contains any data
-        if self.payload.body and (self.payload.body.data is not None):
-            body_encoded = self.payload.body.data
-
-        # Depending on protocol, body may be located elsewhere
-        elif self.payload.mime_parts:
-            for part in self.payload.mime_parts:
-                if part.body and part.body.data is not None:
-                    body_encoded = part.body.data
-                    break
-
-        # If we found email body, decode it
-        if body_encoded:
-            body_html: bytes = base64.urlsafe_b64decode(body_encoded)
-            # ToDo: Explicitly specify bs parser
-            return BeautifulSoup(body_html, features='html.parser').get_text()
-
-        # If we didn't find body, return None
-        else:
-            self.dlq.add_message(
-                problem="No body found in message payload.",
-                data=self.json()
-            )
-            return None
-
 
 
 # Top-level data structure

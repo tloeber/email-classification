@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Final
 import logging
-import json
 
 from data_schemas.gmail.get_thread import RawGmailMessage as RawGmailMessage
 
@@ -28,7 +27,9 @@ class Message:
     """
 
     def __init__(
-        self, sender: str | None, body_as_text: str | None,
+        self,
+        sender: str | None,
+        body_as_text: str | None,
         unix_timestamp: int | None,
     ):
         self._unix_timestamp: Final[int | None] = unix_timestamp

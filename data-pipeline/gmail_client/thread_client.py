@@ -92,10 +92,11 @@ class ThreadClient:
         all_thread_ids: list[ThreadId] = []
         next_page_token: NextPageToken = None
         while True:
-            list_threads_response: RawGmailThreadsList = self._list_thread_ids_raw(
-                next_page_token=next_page_token,
-                query=query
-            )
+            list_threads_response: RawGmailThreadsList = \
+                self._list_thread_ids_raw(
+                    next_page_token=next_page_token,
+                    query=query
+                )
 
             # Only keep id of each thread (for retrieving thread details later)
             try:

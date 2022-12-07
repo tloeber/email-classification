@@ -9,10 +9,10 @@ other modules in this package.
 
 # Enable current type hints for older Python version (<3.10)
 from __future__ import annotations
-
+from typing import TypeAlias
 
 # Type aliases
 # ============
-ThreadId = str
-MessageId = str
-NextPageToken = str | None
+ThreadId: TypeAlias = str
+MessageId: TypeAlias = str
+NextPageToken: TypeAlias = str | None
