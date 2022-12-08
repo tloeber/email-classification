@@ -10,10 +10,9 @@ input_features:
     type: category
 
 preprocessing:
-#   split:
-#     type: datetime
-#     column: time_received
-#     probabilities: [0.75, 0.1, 0.15]
+  split:
+      type: fixed
+      column: split
   oversample_minority:
     0.5  # Give each class 50% representation
 
