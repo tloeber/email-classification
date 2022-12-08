@@ -131,17 +131,35 @@ credentials.json
 token.json
 
 
-# Other
-# =====
+# Manual additions
+# ================
 
-temp.py
-# Pycharm
+# Project specific
+# ----------------
+
+# Ludwig
+**/results/*
+
+
+# Reusable
+# --------
+
+# Type stubs
+**typings/
+
+# Pycharm - Remove if using it as your main IDE
 .idea/*
+
+# Data
+**/data/
 *.pickle
 *.csv
 *.parquet
-data/*
-tmp/*
-# Ludwig
-/results/*
-data/*
+
+# My folder and file conventions
+**old/
+**/tmp/*
+temp.py
+
+# Screenshots
+*.png
