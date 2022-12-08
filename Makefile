@@ -1,4 +1,4 @@
-ludwig:
+ludwig-train:
 	ludwig train --config ludwig/config.yaml --dataset data/model-input-ludwig-small.jsonl
 
 export-env-linux:
