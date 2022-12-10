@@ -3,6 +3,8 @@
 from pathlib import Path
 
 LUDWIG_ROOT_DIR: Path = (
-    Path(__file__).parent.resolve()
+    Path(__file__)
+        .parent  # utils/
+        .parent  # ludwig/
+        .resolve()
 )
-print()

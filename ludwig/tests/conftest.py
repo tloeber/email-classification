@@ -16,6 +16,7 @@ def pytest_sessionstart(session) -> None:
     # absolute_paths.py, because this module is not in the path yet. So we are
     # basically facing a chicken and egg problem, and  solve it by getting Path
     # from scratch again.
+
     LUDWIG_ROOT_DIR: Path = (
         Path(__file__).parent  # tests/
         .parent  # ludwig/
