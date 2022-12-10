@@ -134,13 +134,6 @@ token.json
 # Manual additions
 # ================
 
-# Project specific
-# ----------------
-
-# Ludwig
-**/results/*
-
-
 # Reusable
 # --------
 
@@ -148,7 +141,7 @@ token.json
 **typings/
 
 # Pycharm - Remove if using it as your main IDE
-.idea/*
+.idea/
 
 # Data
 **/data/
@@ -158,8 +151,19 @@ token.json
 
 # My folder and file conventions
 **old/
-**/tmp/*
+**/tmp/
 temp.py
 
 # Screenshots
 *.png
+
+
+# Partially reusable
+# ------------------
+
+# Ludwig
+**/results/
+
+
+# Project specific
+# ----------------
