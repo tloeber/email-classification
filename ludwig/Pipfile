@@ -7,6 +7,9 @@ name = "pypi"
 ludwig = "0.6"
 essential_generators = "*"
 faker = "*"
+torch = "*"
+transformers = "*"
+
 [dev-packages]
 
 [requires]
